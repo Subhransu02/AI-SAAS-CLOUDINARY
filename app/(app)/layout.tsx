@@ -12,6 +12,7 @@ import {
   UploadIcon,
   ImageIcon,
 } from "lucide-react";
+import Image from "next/image";
 
 const sidebarItems = [
   { href: "/home", icon: LayoutDashboardIcon, label: "Home Page" },
@@ -70,17 +71,26 @@ export default function AppLayout({
               {user && (
                 <>
                   <div className="avatar">
-                    <div className="w-8 h-8 rounded-full">
-                      <img
-                        src={user.imageUrl}
-                        alt={
-                          user.username || user.emailAddresses[0].emailAddress
-                        }
-                      />
+                    <div className="w-8 h-8 rounded-full overflow-hidden">
+                      {user.imageUrl ? (
+                        <Image
+                          src={user.imageUrl}
+                          alt={
+                            user.username ||
+                            user.emailAddresses?.[0]?.emailAddress ||
+                            "User Avatar"
+                          }
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                          <ImageIcon className="w-6 h-6 text-gray-600" />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <span className="text-sm truncate max-w-xs lg:max-w-md">
-                    {user.username || user.emailAddresses[0].emailAddress}
+                    {user.username || user.emailAddresses?.[0]?.emailAddress}
                   </span>
                   <button
                     onClick={handleSignOut}

@@ -10,7 +10,7 @@ const prisma = new PrismaClient()
 cloudinary.config({
     cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET // Click 'View Credentials' below to copy your API secret
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 interface CloudinaryUploadResult {
@@ -25,15 +25,22 @@ export async function POST(request: NextRequest) {
 
     try {
 
-        //todo to check user
+        const { userId } = auth();
 
-    if(
-        !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-        !process.env.CLOUDINARY_API_KEY ||
-        !process.env.CLOUDINARY_API_SECRET
-    ){
-        return NextResponse.json({error: "Cloudinary credentials not found"}, {status: 500})
-    }
+        if (!userId) {
+            return NextResponse.json(
+                { error: "Unauthorized: User not authenticated" },
+                { status: 401 }
+            );
+        }
+
+        if (
+            !process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
+            !process.env.CLOUDINARY_API_KEY ||
+            !process.env.CLOUDINARY_API_SECRET
+        ) {
+            return NextResponse.json({ error: "Cloudinary credentials not found" }, { status: 500 })
+        }
 
 
         const formData = await request.formData();
@@ -42,8 +49,8 @@ export async function POST(request: NextRequest) {
         const description = formData.get("description") as string;
         const originalSize = formData.get("originalSize") as string;
 
-        if(!file){
-            return NextResponse.json({error: "File not found"}, {status: 400})
+        if (!file) {
+            return NextResponse.json({ error: "File not found" }, { status: 400 })
         }
 
         const bytes = await file.arrayBuffer()
@@ -56,11 +63,11 @@ export async function POST(request: NextRequest) {
                         resource_type: "video",
                         folder: "video-uploads",
                         transformation: [
-                            {quality: "auto", fetch_format: "mp4"},
+                            { quality: "auto", fetch_format: "mp4" },
                         ]
                     },
                     (error, result) => {
-                        if(error) reject(error);
+                        if (error) reject(error);
                         else resolve(result as CloudinaryUploadResult);
                     }
                 )
@@ -81,8 +88,8 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.log("UPload video failed", error)
-        return NextResponse.json({error: "UPload video failed"}, {status: 500})
-    } finally{
+        return NextResponse.json({ error: "UPload video failed" }, { status: 500 })
+    } finally {
         await prisma.$disconnect()
     }
 
